@@ -3,13 +3,14 @@ const jwt = require('jsonwebtoken');
 const router = express.Router();
 const zod = require('zod');
 const { User, Account } = require('../db');
-const JWT_SECRET = require('../config');
 const { authMiddleware } = require('../middleware');
+const { JWT_SECRET } = require('../config');
+
 
 const userSchema = zod.object({
-    firstname: zod.string().email(),
+    firstname: zod.string(),
     lastname: zod.string(),
-    username: zod.string(),
+    username: zod.string().email(),
     password: zod.string()
 })
 
@@ -18,7 +19,7 @@ router.post('/signup', async (req, res) => {
     const success = userSchema.safeParse(body);
     if (!success) {
         return res.json({
-            msg: "Email already taken / Incorrect inputs"
+            msg: "Incorrect inputs"
         })
     }
 
@@ -27,7 +28,7 @@ router.post('/signup', async (req, res) => {
     })
     if (existinguser) {
         return res.json({
-            msg: "Email already taken / Incorrect inputs"
+            msg: "Email already taken"
         })
     }
 
@@ -40,7 +41,7 @@ router.post('/signup', async (req, res) => {
 
     const userId = user._id;
 
-    await Account.create({
+    const account = await Account.create({
         userId,
         balance: 1+ Math.random() * 10000
     })
@@ -49,7 +50,8 @@ router.post('/signup', async (req, res) => {
 
     res.json({
         msg: "User created successfully",
-        token: token
+        token: token,
+        balance: account.balance
     })
 })
 
@@ -64,7 +66,7 @@ router.post('/signin', async (req, res) => {
 
     if (!success) {
         return res.json({
-            msg: "Email already taken / Incorrect inputs"
+            msg: "Incorrect inputs"
         })
     }
 
@@ -73,6 +75,8 @@ router.post('/signin', async (req, res) => {
         password: req.body.password
     })
 
+    const account = await Account.findOne({ userId: user._id });
+
     const userId = user._id
 
     if (user) {
@@ -80,6 +84,7 @@ router.post('/signin', async (req, res) => {
 
         res.json({
             token: token,
+            balance: account.balance
         })
         return;
     }
@@ -97,7 +102,7 @@ const updateSchema = zod.object({
 
 router.put('/', authMiddleware, async (req, res) => {
 
-    const { success } = updateSchema.safeParse(req.body);
+    const { success, data } = updateSchema.safeParse(req.body);
     if (!success) {
         return res.json({
             msg: "Error while updating information"

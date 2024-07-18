@@ -1,4 +1,4 @@
 
 module.exports = {
-	JWT_SECRET: "jwtsecret"
+	JWT_SECRET: "danishsecret"
 }

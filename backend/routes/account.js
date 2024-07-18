@@ -22,7 +22,7 @@ router.post('/transfer', authMiddleware, async (req, res) => {
     const {amount, to} = req.body;
 
     const amountNumber = Number(amount);
-    const toUserID = new mongoose.Types.ObjectId(to);
+    const toUserID = new mongoose.Types.ObjectId(to);   //const toUser = new mongoose.Types.ObjectId(to)
 
     const account = await Account.findOne({userId: req.userId}).session(session);
 
